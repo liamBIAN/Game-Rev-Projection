@@ -279,14 +279,13 @@ function u(){
 
   const totalGross=pkgRev+itemRev+spRev+dlcRev;
 
-  // 스팀 수수료 (3단계: 30%/25%/20%)
-  const steamGross=totalGross*pcSh;
+  // 수수료: 엑셀은 Steam PC 매출 기준으로만 산출 (콘솔은 별도 시트)
+  // 스팀 수수료 3단계 슬라이딩 (전체 Gross에 적용)
   let steamFee;
-  if(steamGross<=STEAM_THRESH1) steamFee=steamGross*SF_1;
-  else if(steamGross<=STEAM_THRESH2) steamFee=STEAM_THRESH1*SF_1+(steamGross-STEAM_THRESH1)*SF_2;
-  else steamFee=STEAM_THRESH1*SF_1+(STEAM_THRESH2-STEAM_THRESH1)*SF_2+(steamGross-STEAM_THRESH2)*SF_3;
-  const consoleFee=totalGross*(psSh+xbSh)*CONSOLE_FEE;
-  const totalFee=steamFee+consoleFee;
+  if(totalGross<=STEAM_THRESH1) steamFee=totalGross*SF_1;
+  else if(totalGross<=STEAM_THRESH2) steamFee=STEAM_THRESH1*SF_1+(totalGross-STEAM_THRESH1)*SF_2;
+  else steamFee=STEAM_THRESH1*SF_1+(STEAM_THRESH2-STEAM_THRESH1)*SF_2+(totalGross-STEAM_THRESH2)*SF_3;
+  const totalFee=steamFee;
   const netRev=totalGross-totalFee;
   const kgRS=netRev*rs;
 
@@ -313,8 +312,8 @@ function u(){
   const mPost=kgRS>0?(profPost/kgRS*100):0;
 
   const avgFee=totalGross>0?totalFee/totalGross:0.25;
-  // BEP: 패키지 기준, BEP 도달 시점은 매출 초기라 스팀 30% 구간
-  const pkgFeeRate=SF_1*pcSh+CONSOLE_FEE*(psSh+xbSh);
+  // BEP: Steam 수수료만 적용 (초기 30% 구간)
+  const pkgFeeRate=SF_1;
   const cpU=pkgPrice*(1-pkgFeeRate)*rs;
   const bepU=cpU>0?Math.round(costPost/cpU):999999999;
   const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
@@ -357,9 +356,14 @@ function u(){
   document.getElementById('cont-bar').innerHTML=ce.map(([n,v])=>{const w=Math.round(v/ct2*100);return`<div style="width:${w}%;background:${CC[n]||'#666'}">${w>8?Math.round(v)+'%':''}</div>`;}).join('');
   document.getElementById('cont-lg').innerHTML=ce.map(([n,v])=>`<span><span class="d" style="background:${CC[n]||'#666'}"></span>${n} ${Math.round(v)}%</span>`).join('');
 
-  const eSF=steamGross>0?(steamFee/steamGross):SF_LOW;
-  document.getElementById('ptbl').innerHTML='<tr><th>플랫폼</th><th style="text-align:right">비중</th><th style="text-align:right">수수료</th><th style="text-align:right">Gross</th><th style="text-align:right">Net</th></tr>'+
-    [{n:'Steam PC',s:pcSh,f:eSF,c:'#5b6ef5'},{n:'PS5',s:psSh,f:CONSOLE_FEE,c:'#22d4b8'},{n:'Xbox',s:xbSh,f:CONSOLE_FEE,c:'#1fc876'}].map(p=>`<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${p.c};margin-right:5px"></span>${p.n}</td><td style="text-align:right;font-weight:600">${Math.round(p.s*100)}%</td><td style="text-align:right;color:var(--text2)">${Math.round(p.f*100)}%</td><td style="text-align:right">${fa(totalGross*p.s)}</td><td style="text-align:right;font-weight:600">${fa(totalGross*p.s*(1-p.f))}</td></tr>`).join('');
+  const eSF=totalGross>0?(steamFee/totalGross):SF_1;
+  // 플랫폼: 엑셀은 Steam 기준, 콘솔은 별도 추정
+  const consoleGrossEst=totalGross*(psSh+xbSh)/(pcSh||1); // PC매출 기준 콘솔 추정
+  document.getElementById('ptbl').innerHTML='<tr><th>플랫폼</th><th style="text-align:right">수수료</th><th style="text-align:right">매출(Gross)</th><th style="text-align:right">Net</th></tr>'+
+    `<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#5b6ef5;margin-right:5px"></span>Steam PC</td><td style="text-align:right;color:var(--text2)">${Math.round(eSF*100)}%</td><td style="text-align:right">${fa(totalGross)}</td><td style="text-align:right;font-weight:600">${fa(netRev)}</td></tr>`+
+    `<tr><td colspan="4" style="font-size:10px;color:var(--text3);padding-top:8px">콘솔 별도 추정 (PC:PS:Xbox = ${Math.round(pcSh*100)}:${Math.round(psSh*100)}:${Math.round(xbSh*100)})</td></tr>`+
+    `<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#22d4b8;margin-right:5px"></span>PS5 (추정)</td><td style="text-align:right;color:var(--text2)">30%</td><td style="text-align:right">${fa(totalGross*psSh/(pcSh||1))}</td><td style="text-align:right">${fa(totalGross*psSh/(pcSh||1)*0.70)}</td></tr>`+
+    `<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#1fc876;margin-right:5px"></span>Xbox (추정)</td><td style="text-align:right;color:var(--text2)">30%</td><td style="text-align:right">${fa(totalGross*xbSh/(pcSh||1))}</td><td style="text-align:right">${fa(totalGross*xbSh/(pcSh||1)*0.70)}</td></tr>`;
 
   draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgFee,rs,pkgPrice);
 }
