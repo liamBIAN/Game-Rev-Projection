@@ -308,7 +308,9 @@ function u(){
   const mPost=kgRS>0?(profPost/kgRS*100):0;
 
   const avgFee=totalGross>0?totalFee/totalGross:0.25;
-  const cpU=pkgPrice*(1-avgFee)*rs;
+  // BEP: 패키지 매출 기준 수수료율 사용 (아이템/DLC 제외)
+  const pkgFeeRate=SF_LOW*pcSh+CONSOLE_FEE*(psSh+xbSh);
+  const cpU=pkgPrice*(1-pkgFeeRate)*rs;
   const bepU=cpU>0?Math.round(costPre/cpU):999999999;
   const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
   const bepPct=Math.min(100,Math.round(total3y/bepU*100));
