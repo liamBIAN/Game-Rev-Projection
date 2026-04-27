@@ -176,8 +176,8 @@ const STEAM_THRESH1 = 29000000000; // ~290억 이하 30%
 const STEAM_THRESH2 = 65000000000; // ~650억 이하 25%, 초과 20%
 const SF_1 = 0.30, SF_2 = 0.25, SF_3 = 0.20;
 const CONSOLE_FEE = 0.30;
-// 공통비: MM당 18,611,795원 (엑셀 검증)
-const COMMON_PER_MM = 18611795;
+// 공통비: 인건비 대비 약 1.95배 (엑셀 검증: 공통비322억/인건비165억)
+const COMMON_RATIO = 1.95;
 
 // 36개월 디폴트 비율
 const DEF_R=[0.220,0.198,0.147,0.085,0.029,0.012278220106132042,0.008,0.008,0.006,0.006,0.006,0.015,0.052,0.032,0.010,0.010,0.010,0.010,0.010,0.010,0.005,0.007,0.009,0.005,0.024,0.010,0.008,0.009,0.010,0.006,0.005,0.006,0.004,0.003,0.003,0.002];
@@ -300,9 +300,9 @@ function u(){
   const extMM=hrD.filter(h=>h.t==='e').reduce((a,h)=>a+h.mm,0);
   const mHR=regMM*RC+extMM*EC;
   const hr3y=mHR*36;
-  // 공통비 = 총 MM × MM당 공통비 × 36개월
+  // 공통비 = 인건비 × 1.95배 (엑셀 검증)
   const totalMM=regMM+extMM;
-  const comCost=totalMM*COMMON_PER_MM*36;
+  const comCost=hr3y*COMMON_RATIO;
   const liveMkt=kgRS*lvmRate;
   const etcCost=1150000000+14000000*36;
   const costPre=hr3y+cbtMkt+lnchMkt+liveMkt+infraCost+lf+mg+etcCost;
@@ -340,7 +340,7 @@ function u(){
     ['퍼블리싱 인건비',fa(hr3y)],['  정규 ('+regMM.toFixed(1)+'MM)',fa(regMM*RC*36),'sub'],['  외주 ('+extMM.toFixed(1)+'MM)',fa(extMM*EC*36),'sub'],
     ['마케팅 합계',fa(cbtMkt+lnchMkt+liveMkt)],['  CBT',fa(cbtMkt),'sub'],['  런칭',fa(lnchMkt),'sub'],['  라이브',fa(liveMkt),'sub'],
     ['인프라 (MCU×'+infraPer.toLocaleString()+'원)',fa(infraCost)],['MG + LF',fa(mg+lf)],['기타 (L10N, SW)',fa(etcCost)],
-    ['공통비 (MM당 '+Math.round(COMMON_PER_MM/10000)+'만×'+totalMM.toFixed(1)+'MM)',fa(comCost)],['총비용 (공통비 前)',fa(costPre),'total'],['총비용 (공통비 後)',fa(costPost),'total'],
+    ['공통비 (인건비×'+COMMON_RATIO+')',fa(comCost)],['총비용 (공통비 前)',fa(costPre),'total'],['총비용 (공통비 後)',fa(costPost),'total'],
   ].map(r=>`<tr><td class="${r[2]||''}">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
 
   document.getElementById('hsu').innerHTML=`<div class="hr"><span class="la">총 MM/월</span><span class="va">${(regMM+extMM).toFixed(1)}</span></div><div class="hr"><span class="la">월 인건비</span><span class="va">${fa(mHR)}</span></div><div class="hr"><span class="la">3년 합계</span><span class="va">${fa(hr3y)}</span></div>`;
