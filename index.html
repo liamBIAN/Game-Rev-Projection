@@ -133,7 +133,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
     <div class="mc"><div class="ml">3년 패키지 누적</div><div class="mv ac" id="k-units">—</div><div class="ms" id="k-beplbl">—</div></div>
     <div class="mc"><div class="ml">3년 총 매출 (Gross)</div><div class="mv" id="k-gross">—</div><div class="ms" id="k-gross-sub">—</div></div>
     <div class="mc"><div class="ml">KG RS Net 매출</div><div class="mv" id="k-net">—</div><div class="ms">수수료·R/S 차감</div></div>
-    <div class="mc"><div class="ml">영업이익 (공통비前)</div><div class="mv" id="k-profit">—</div><div class="ms" id="k-margin">—</div></div>
+    <div class="mc"><div class="ml">영업이익 (공통비後)</div><div class="mv" id="k-profit">—</div><div class="ms" id="k-margin">—</div></div>
   </div>
   <div class="bep">
     <div style="display:flex;gap:16px;flex-wrap:wrap"><div class="bi">BEP: <strong id="b-u">—</strong></div><div class="bi">1년차: <strong id="b-y1">—</strong></div><div class="bi">도달: <strong id="b-w">—</strong></div></div>
@@ -311,7 +311,7 @@ function u(){
   // BEP: 패키지 매출 기준 수수료율 사용 (아이템/DLC 제외)
   const pkgFeeRate=SF_LOW*pcSh+CONSOLE_FEE*(psSh+xbSh);
   const cpU=pkgPrice*(1-pkgFeeRate)*rs;
-  const bepU=cpU>0?Math.round(costPre/cpU):999999999;
+  const bepU=cpU>0?Math.round(costPost/cpU):999999999;
   const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
   const bepPct=Math.min(100,Math.round(total3y/bepU*100));
   const bepCol=bepPct>=100?'#1fc876':bepPct>=70?'#f5a623':'#5b6ef5';
@@ -321,8 +321,8 @@ function u(){
   document.getElementById('k-gross').textContent=fa(totalGross);
   document.getElementById('k-gross-sub').textContent='패키지 '+fa(pkgRev)+' ('+Math.round(pkgRev/totalGross*100)+'%)';
   document.getElementById('k-net').textContent=fa(kgRS);
-  const pe=document.getElementById('k-profit');pe.textContent=fa(profPre);pe.className='mv '+(profPre>=0?'pos':'neg');
-  document.getElementById('k-margin').textContent='前 '+Math.round(mPre)+'% / 後 '+Math.round(mPost)+'%';
+  const pe=document.getElementById('k-profit');pe.textContent=fa(profPost);pe.className='mv '+(profPost>=0?'pos':'neg');
+  document.getElementById('k-margin').textContent='영업이익률 '+Math.round(mPost)+'%';
   document.getElementById('k-beplbl').textContent='BEP '+fu(bepU)+' 장';
   document.getElementById('b-u').textContent=fu(bepU)+' 장';
   document.getElementById('b-y1').textContent=fu(y1nru)+' 장';
