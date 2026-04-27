@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>게임 매출 프로젝션 시뮬레이터 v2</title>
+<title>게임 매출 프로젝션 시뮬레이터 v3</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{--bg:#0f0f13;--bg2:#17171e;--bg3:#1e1e28;--bg4:#252530;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#f0f0f5;--text2:#9898b0;--text3:#5a5a70;--accent:#5b6ef5;--green:#1fc876;--red:#f04a4a;--amber:#f5a623;--teal:#22d4b8;--r:10px;--r2:14px}
@@ -29,7 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:'Pretendard','Apple SD G
 .cn{font-size:11px;color:var(--text2)}.cv{font-size:12px;font-weight:600;color:var(--text)}
 input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--bg4);border-radius:2px;outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--accent);border-radius:50%;cursor:pointer}
-input[type=number]{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:5px 8px;font-size:11px;width:56px;text-align:center;-moz-appearance:textfield}
+input[type=number]{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:5px 8px;font-size:11px;width:60px;text-align:center;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button{opacity:1}
 .mg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
 .mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px}
@@ -78,63 +78,84 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
 .hs{background:var(--bg3);border-radius:7px;padding:8px 10px;margin-top:8px}
 .hr{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
 .hr .la{color:var(--text2)}.hr .va{color:var(--text);font-weight:600}
-.co{max-height:0;overflow:hidden;transition:max-height .3s}.co.open{max-height:2000px}
+.co{max-height:0;overflow:hidden;transition:max-height .3s}.co.open{max-height:3000px}
 .cost-table{width:100%;font-size:11px;border-collapse:collapse;margin-top:8px}
 .cost-table td{padding:4px 0;border-bottom:1px solid var(--border)}
 .cost-table td:last-child{text-align:right;font-weight:600}
 .cost-table .sub{padding-left:12px;color:var(--text2)}
 .cost-table .total{border-top:2px solid var(--border2);font-weight:700;color:var(--text)}
+.month-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.month-row .mlbl{font-size:10px;color:var(--text3);width:32px;flex-shrink:0}
+.month-row input{width:54px;font-size:10px;padding:3px 5px}
+.month-row .mpct{font-size:10px;color:var(--text3);width:36px;text-align:right}
+.inline-input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px;width:80px;text-align:center}
 @media(max-width:900px){.main{grid-template-columns:1fr}.mg{grid-template-columns:repeat(2,1fr)}.g2,.g3{grid-template-columns:1fr}.rg{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="header">
-  <div class="header-left"><div class="logo">G</div><span class="header-title">게임 매출 프로젝션 시뮬레이터</span><span class="header-sub">v2 · 엑셀 수식 기반</span></div>
+  <div class="header-left"><div class="logo">G</div><span class="header-title">게임 매출 프로젝션 시뮬레이터</span><span class="header-sub">v3 · 엑셀 수식 기반</span></div>
   <div class="tabs"><button class="tab active" onclick="setSc('avr',this)">Average</button><button class="tab" onclick="setSc('best',this)">Best</button></div>
 </div>
 <div class="main">
 <div class="sidebar">
+
   <div class="ss"><div class="sl">계약 조건</div>
-    <div class="ctrl"><div class="ch"><span class="cn">패키지 가격 (USD)</span><span class="cv" id="l-price">$49.99</span></div><input type="range" id="s-price" min="30" max="80" step="1" value="50" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">패키지 가격 (USD)</span><span class="cv" id="l-price">$50</span></div><input type="range" id="s-price" min="30" max="80" step="1" value="50" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">LF (억원)</span><span class="cv" id="l-lf">150억</span></div><input type="range" id="s-lf" min="0" max="500" step="10" value="150" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">MG (억원)</span><span class="cv" id="l-mg">100억</span></div><input type="range" id="s-mg" min="0" max="500" step="10" value="100" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">KG R/S (국내/해외)</span><span class="cv" id="l-rs">60%</span></div><input type="range" id="s-rs" min="40" max="80" step="5" value="60" oninput="u()"></div>
-    <div class="ctrl"><div class="ch"><span class="cn">계약기간 (개월)</span><span class="cv" id="l-term">60</span></div><input type="range" id="s-term" min="36" max="120" step="12" value="60" oninput="u()"></div>
   </div>
+
   <div class="ss"><div class="sl">판매 가정</div>
-    <div class="ctrl"><div class="ch"><span class="cn">런칭월 NRU (패키지 판매)</span><span class="cv" id="l-nru">150만</span></div><input type="range" id="s-nru" min="30" max="600" step="10" value="150" oninput="u()"></div>
-    <div class="ctrl"><div class="ch"><span class="cn">M+1 판매 (만)</span><span class="cv" id="l-m1">100만</span></div><input type="range" id="s-m1" min="20" max="400" step="10" value="100" oninput="u()"></div>
-    <div class="ctrl"><div class="ch"><span class="cn">M+2 이후 바닥 (만/월)</span><span class="cv" id="l-floor">5만</span></div><input type="range" id="s-floor" min="1" max="30" step="1" value="5" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">3년 누적 판매 (만장)</span><span class="cv" id="l-3y">500만</span></div><input type="range" id="s-3y" min="100" max="1500" step="10" value="500" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">1년 판매 (만장)</span><span class="cv" id="l-1y">370만</span></div><input type="range" id="s-1y" min="50" max="1000" step="10" value="370" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">MAU 재방문율</span><span class="cv" id="l-ret">50%</span></div><input type="range" id="s-ret" min="20" max="80" step="5" value="50" oninput="u()"></div>
+    <div class="sl" style="margin-top:8px">월별 판매 비율 <span class="tb" onclick="tog('sec-months')">상세</span></div>
+    <div class="co" id="sec-months">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px">3년 판매량 × 비율 = 월별 판매. 합계 자동 정규화.</div>
+      <div id="month-inputs"></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">비율 합계: <strong id="ratio-sum">100</strong>%</div>
+      <div style="margin-top:6px"><button onclick="resetRatios()" style="font-size:10px;background:var(--bg4);border:none;color:var(--text2);padding:4px 10px;border-radius:4px;cursor:pointer">디폴트 초기화</button></div>
+    </div>
   </div>
+
   <div class="ss"><div class="sl">플랫폼 비중 (매출 기준)</div>
     <div style="font-size:10px;color:var(--text3);margin-bottom:8px">PC:PS:Xbox = 7:1.8:1.2 (엑셀 기준)</div>
     <div class="ctrl"><div class="ch"><span class="cn">PC (Steam)</span><span class="cv" id="l-pc">70%</span></div><input type="range" id="s-pc" min="30" max="90" step="1" value="70" oninput="syncP()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">PS5</span><span class="cv" id="l-ps">18%</span></div><input type="range" id="s-ps" min="5" max="50" step="1" value="18" oninput="syncP()"></div>
     <div style="font-size:10px;color:var(--text3)">Xbox = 나머지 (<span id="l-xb">12</span>%)</div>
   </div>
-  <div class="ss"><div class="sl">수수료 & 마케팅</div>
-    <div class="ctrl"><div class="ch"><span class="cn">스팀 수수료 (Gross<650억)</span><span class="cv" id="l-sf1">25%</span></div><input type="range" id="s-sf1" min="20" max="30" step="5" value="25" oninput="u()"></div>
-    <div class="ctrl"><div class="ch"><span class="cn">스팀 수수료 (Gross≥650억)</span><span class="cv" id="l-sf2">20%</span></div><input type="range" id="s-sf2" min="15" max="25" step="5" value="20" oninput="u()"></div>
+
+  <div class="ss"><div class="sl">마케팅</div>
     <div class="ctrl"><div class="ch"><span class="cn">CBT 마케팅 (억)</span><span class="cv" id="l-cbt">10억</span></div><input type="range" id="s-cbt" min="0" max="50" step="5" value="10" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">런칭 마케팅 (억)</span><span class="cv" id="l-lmk">118억</span></div><input type="range" id="s-lmk" min="30" max="400" step="10" value="118" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">라이브 마케팅 (RS Net %)</span><span class="cv" id="l-lvm">4%</span></div><input type="range" id="s-lvm" min="1" max="10" step="1" value="4" oninput="u()"></div>
   </div>
+
   <div class="ss"><div class="sl">인프라</div>
-    <div class="ctrl"><div class="ch"><span class="cn">AWS 등 (백만원/월)</span><span class="cv" id="l-infra">600</span></div><input type="range" id="s-infra" min="100" max="2000" step="50" value="600" oninput="u()"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span class="cn">인당 비용 (원/MAU·월)</span>
+      <input type="number" class="inline-input" id="s-infra" value="600" min="100" max="5000" step="50" onchange="u()">
+    </div>
+    <div style="font-size:10px;color:var(--text3)">= MAU × 인당비용으로 월별 인프라 추산</div>
   </div>
+
   <div class="ss"><div class="sl">추가 매출</div>
     <div class="ctrl"><div class="ch"><span class="cn">아이템 ARPPU (원)</span><span class="cv" id="l-arppu">40,000</span></div><input type="range" id="s-arppu" min="10000" max="100000" step="5000" value="40000" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">아이템 PU Rate</span><span class="cv" id="l-pur">5%</span></div><input type="range" id="s-pur" min="1" max="15" step="1" value="5" oninput="u()"></div>
     <div class="tr"><span class="tl">시즌패스 포함</span><label class="tg"><input type="checkbox" id="t-sp" checked onchange="u()"><span class="ts"></span></label></div>
     <div class="tr"><span class="tl">DLC 포함</span><label class="tg"><input type="checkbox" id="t-dlc" onchange="u()"><span class="ts"></span></label></div>
   </div>
+
   <div class="ss"><div class="sl">국가별 Steam 비중 (%) <span class="tb" onclick="tog('sec-c')">펼치기</span></div>
     <div class="co" id="sec-c"><div id="ci"></div><div style="font-size:10px;color:var(--text3);margin-top:4px">합계: <strong id="cs">100</strong>%</div></div>
   </div>
+
   <div class="ss"><div class="sl">인력 MM/월 <span class="tb" onclick="tog('sec-h')">펼치기</span></div>
     <div class="co" id="sec-h"><div id="hi"></div><div class="hs" id="hsu"></div></div>
   </div>
+
 </div>
 <div class="content">
   <div class="mg">
@@ -148,18 +169,15 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
     <div class="bp"><div class="bt"><div class="bf" id="b-bar" style="width:0%"></div></div></div>
     <div style="font-size:12px;font-weight:700;min-width:40px;text-align:right" id="b-pct">0%</div>
   </div>
-
   <div class="g2">
-    <div class="cc"><div class="ct">월별 NRU 패키지 판매량 (만 장) — M ~ M+16</div><div style="position:relative;height:180px"><canvas id="cS"></canvas></div></div>
+    <div class="cc"><div class="ct">월별 NRU 패키지 판매량 (만 장)</div><div style="position:relative;height:180px"><canvas id="cS"></canvas></div></div>
     <div class="cc"><div class="ct">비용 구조 (3년 합계)</div><table class="cost-table" id="cost-tbl"></table></div>
   </div>
-
   <div class="g3">
     <div class="cc"><div class="ct">매출 구성 (3년 Gross)</div><div class="lg" id="mx-lg"></div><div style="position:relative;height:150px"><canvas id="cM"></canvas></div></div>
-    <div class="cc"><div class="ct">누적 KG RS Net vs 총비용</div><div class="lg"><span class="li"><span class="ld" style="background:#5b6ef5"></span>누적 Net</span><span class="li"><span class="ld" style="background:#f04a4a"></span>총비용</span></div><div style="position:relative;height:150px"><canvas id="cC"></canvas></div></div>
+    <div class="cc"><div class="ct">누적 KG RS Net vs 총비용</div><div class="lg"><span class="li"><span class="ld" style="background:#5b6ef5"></span>누적 Net</span><span class="li"><span class="ld" style="background:#f04a4a"></span>총비용(前)</span><span class="li"><span class="ld" style="background:rgba(240,74,74,0.3)"></span>총비용(後)</span></div><div style="position:relative;height:150px"><canvas id="cC"></canvas></div></div>
     <div class="cc"><div class="ct">연도별 영업이익률 (공통비 前/後)</div><div style="position:relative;height:175px"><canvas id="cMar"></canvas></div></div>
   </div>
-
   <div class="g2">
     <div class="cc">
       <div class="st">대륙별 Steam 매출 비중</div>
@@ -177,11 +195,20 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
 </div>
 </div>
 <script>
-const KRW=1;let sc='avr';let CH={};
+let sc='avr';let CH={};
 const PKG_MIX={standard:.936,deluxe:.042,collectors:.022};
 const PKG_PRICE_RATIO={standard:1,deluxe:1.386,collectors:1.782};
-const SP_PRICE_RATIO=0.387; // 시즌패스/스탠다드 가격비
-const DLC_PRICE_RATIO=0.604; // DLC/스탠다드 가격비
+const SP_PRICE_RATIO=0.387;
+const DLC_PRICE_RATIO=0.604;
+const STEAM_FEE_THRESHOLD=65000000000;
+const STEAM_FEE_LOW=0.25;
+const STEAM_FEE_HIGH=0.20;
+const CONSOLE_FEE=0.30;
+const COMMON_COST_MULT=2.5;
+
+// 36개월 디폴트 비율 (엑셀 기준)
+const DEFAULT_RATIOS=[0.220,0.198,0.147,0.085,0.029,0.012,0.008,0.008,0.006,0.006,0.006,0.015,0.052,0.032,0.010,0.010,0.010,0.010,0.010,0.010,0.005,0.007,0.009,0.005,0.024,0.010,0.008,0.009,0.010,0.006,0.005,0.006,0.004,0.003,0.003,0.002];
+let monthRatios=[...DEFAULT_RATIOS];
 
 const COUNTRIES=[
   {code:'US',name:'미국',pct:28,cont:'북미'},{code:'CA',name:'캐나다',pct:3,cont:'북미'},
@@ -191,7 +218,6 @@ const COUNTRIES=[
   {code:'RU',name:'러시아/CIS',pct:4,cont:'CIS'},{code:'OT',name:'기타',pct:3,cont:'기타'}
 ];
 const CONT_COL={'북미':'#5b6ef5','남미':'#22d4b8','유럽':'#f5a623','아시아':'#f04a4a','CIS':'#1fc876','기타':'#9898b0'};
-
 const HR_PARTS=[
   {id:'biz',n:'사업',mm:7.1,t:'r'},{id:'loc',n:'현지화',mm:3.5,t:'r'},{id:'mkt',n:'마케팅',mm:1.6,t:'r'},
   {id:'pr',n:'홍보',mm:0.3,t:'r'},{id:'qa',n:'QA(정규)',mm:4.2,t:'r'},{id:'qae',n:'QA(외주)',mm:4.7,t:'e'},
@@ -199,6 +225,37 @@ const HR_PARTS=[
   {id:'ops',n:'운영(정규)',mm:2.0,t:'r'},{id:'cs',n:'CS(외주)',mm:3.8,t:'e'}
 ];
 const REG_COST=8500000,EXT_COST=4000000;
+
+function initMonthInputs(){
+  const el=document.getElementById('month-inputs');
+  el.innerHTML=monthRatios.map((r,i)=>{
+    const lbl=i===0?'M':'M+'+(i);
+    return`<div class="month-row"><span class="mlbl">${lbl}</span><input type="number" id="mr-${i}" value="${(r*1000).toFixed(1)}" min="0" max="500" step="0.1" onchange="onMonthChange()"><span class="mpct" id="mp-${i}">${(r*100).toFixed(1)}%</span></div>`;
+  }).join('');
+}
+function onMonthChange(){
+  for(let i=0;i<36;i++){
+    monthRatios[i]=(parseFloat(document.getElementById('mr-'+i).value)||0)/1000;
+  }
+  updateRatioDisplay();
+  u();
+}
+function updateRatioDisplay(){
+  const sum=monthRatios.reduce((a,b)=>a+b,0);
+  document.getElementById('ratio-sum').textContent=(sum*100).toFixed(1);
+  for(let i=0;i<36;i++){
+    const pct=sum>0?(monthRatios[i]/sum*100):0;
+    document.getElementById('mp-'+i).textContent=pct.toFixed(1)+'%';
+  }
+}
+function resetRatios(){
+  monthRatios=[...DEFAULT_RATIOS];
+  for(let i=0;i<36;i++){
+    document.getElementById('mr-'+i).value=(monthRatios[i]*1000).toFixed(1);
+  }
+  updateRatioDisplay();
+  u();
+}
 
 function initCI(){
   document.getElementById('ci').innerHTML=COUNTRIES.map(c=>
@@ -210,58 +267,28 @@ function initHI(){
     `<div class="hg"><span class="hn">${h.n}</span><input type="number" id="h-${h.id}" value="${h.mm}" min="0" max="50" step="0.1" onchange="u()"></div>`
   ).join('');
 }
-function tog(id){const e=document.getElementById(id);e.classList.toggle('open');const b=e.previousElementSibling.querySelector('.tb');b.textContent=e.classList.contains('open')?'접기':'펼치기';}
+
+function tog(id){const e=document.getElementById(id);e.classList.toggle('open');const b=e.previousElementSibling?.querySelector('.tb')||e.closest('.ss').querySelector('.tb');if(b)b.textContent=e.classList.contains('open')?'접기':'펼치기';}
 function setSc(s,e){sc=s;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.classList.add('active');u();}
 function syncP(){let p=+document.getElementById('s-pc').value,s=+document.getElementById('s-ps').value;if(p+s>95)s=95-p;document.getElementById('s-ps').value=s;document.getElementById('l-pc').textContent=p+'%';document.getElementById('l-ps').textContent=s+'%';document.getElementById('l-xb').textContent=Math.max(0,100-p-s);u();}
 function fa(v){const n=Math.round(v/1e8);return Math.abs(n)>=10000?(n/10000).toFixed(1)+'조':n.toLocaleString()+'억';}
 function fu(v){return v>=10000000?(v/10000000).toFixed(0)+'천만':v>=10000?Math.round(v/10000)+'만':v.toLocaleString();}
-
-function buildNRU(nru0,m1,floor){
-  // M ~ M+16 (17개월) — 엑셀 (Avr.)매출 NRU 패턴 기반
-  // M: nru0, M+1: m1, M+2이후: 급감 후 floor 유지, M+11부터 세일 스파이크
-  const nru=[];
-  nru[0]=nru0; nru[1]=m1;
-  const decay=sc==='best'?0.72:0.74;
-  nru[2]=Math.round(m1*decay);
-  for(let i=3;i<17;i++){
-    const prev=nru[i-1];
-    if(i===11) nru[i]=Math.round(floor*1.5*10000); // 세일 스파이크
-    else if(i===12) nru[i]=Math.round(floor*5.2*10000); // 대형 세일
-    else if(i===13) nru[i]=Math.round(floor*3.2*10000);
-    else nru[i]=Math.max(floor*10000,Math.round(prev*decay));
-  }
-  return nru;
-}
-
-function buildMAU(nru,ret){
-  const mau=[];
-  mau[0]=nru[0];
-  for(let i=1;i<nru.length;i++){
-    mau[i]=nru[i]+Math.round(mau[i-1]*ret);
-    if(mau[i]<nru[i])mau[i]=nru[i];
-  }
-  return mau;
-}
 
 function u(){
   const price=+document.getElementById('s-price').value;
   const lf=+document.getElementById('s-lf').value*1e8;
   const mg=+document.getElementById('s-mg').value*1e8;
   const rs=+document.getElementById('s-rs').value/100;
-  const term=+document.getElementById('s-term').value;
-  const nru0=+document.getElementById('s-nru').value*10000;
-  const m1val=+document.getElementById('s-m1').value*10000;
-  const floor=+document.getElementById('s-floor').value;
+  const total3y=+document.getElementById('s-3y').value*10000;
+  const total1y=+document.getElementById('s-1y').value*10000;
   const ret=+document.getElementById('s-ret').value/100;
   const pcSh=+document.getElementById('s-pc').value/100;
   const psSh=+document.getElementById('s-ps').value/100;
   const xbSh=Math.max(0,1-pcSh-psSh);
-  const sf1=+document.getElementById('s-sf1').value/100;
-  const sf2=+document.getElementById('s-sf2').value/100;
   const cbtMkt=+document.getElementById('s-cbt').value*1e8;
   const lnchMkt=+document.getElementById('s-lmk').value*1e8;
   const lvmRate=+document.getElementById('s-lvm').value/100;
-  const infraM=+document.getElementById('s-infra').value*1e6;
+  const infraPerMAU=+document.getElementById('s-infra').value;
   const arppu=+document.getElementById('s-arppu').value;
   const purRate=+document.getElementById('s-pur').value/100;
   const spOn=document.getElementById('t-sp').checked;
@@ -272,127 +299,107 @@ function u(){
   document.getElementById('l-lf').textContent=Math.round(lf/1e8)+'억';
   document.getElementById('l-mg').textContent=Math.round(mg/1e8)+'억';
   document.getElementById('l-rs').textContent=Math.round(rs*100)+'%';
-  document.getElementById('l-term').textContent=term;
-  document.getElementById('l-nru').textContent=Math.round(nru0/10000)+'만';
-  document.getElementById('l-m1').textContent=Math.round(m1val/10000)+'만';
-  document.getElementById('l-floor').textContent=floor+'만';
+  document.getElementById('l-3y').textContent=Math.round(total3y/10000)+'만';
+  document.getElementById('l-1y').textContent=Math.round(total1y/10000)+'만';
   document.getElementById('l-ret').textContent=Math.round(ret*100)+'%';
-  document.getElementById('l-sf1').textContent=Math.round(sf1*100)+'%';
-  document.getElementById('l-sf2').textContent=Math.round(sf2*100)+'%';
   document.getElementById('l-cbt').textContent=Math.round(cbtMkt/1e8)+'억';
   document.getElementById('l-lmk').textContent=Math.round(lnchMkt/1e8)+'억';
   document.getElementById('l-lvm').textContent=Math.round(lvmRate*100)+'%';
-  document.getElementById('l-infra').textContent=Math.round(infraM/1e6);
   document.getElementById('l-arppu').textContent=arppu.toLocaleString();
   document.getElementById('l-pur').textContent=Math.round(purRate*100)+'%';
 
-  // 가중평균 패키지 가격 (KRW) — 엑셀 방식
-  const stdPriceKRW=price*1100; // 엑셀 기준 환율 1100 (48181/43.81≈1100)
+  // 가중평균 패키지 가격
+  const stdPriceKRW=price*1100;
   const avgPkgPrice=stdPriceKRW*(PKG_MIX.standard+PKG_MIX.deluxe*PKG_PRICE_RATIO.deluxe+PKG_MIX.collectors*PKG_PRICE_RATIO.collectors);
 
-  // NRU 17개월
-  const nru=buildNRU(nru0,m1val,floor);
-  const mau=buildMAU(nru,ret);
-  const totalNRU17=nru.reduce((a,b)=>a+b,0);
+  // 월별 NRU: 비율 정규화 후 적용
+  const ratioSum=monthRatios.reduce((a,b)=>a+b,0)||1;
+  const normalized=monthRatios.map(r=>r/ratioSum);
+  const monthlyNRU=normalized.map(r=>Math.round(total3y*r));
 
-  // 3년 추정 (17개월 + 나머지 19개월 바닥)
-  const remaining=36-17;
-  const tailNRU=floor*10000*remaining;
-  const totalNRU3y=totalNRU17+tailNRU;
+  // 실제 합계 보정 (반올림 오차)
+  const actualTotal=monthlyNRU.reduce((a,b)=>a+b,0);
 
-  // 매출 계산 — 엑셀 방식
-  // 패키지 매출 = NRU * 가중평균가
-  const pkgRev=totalNRU3y*avgPkgPrice;
+  // 1년차 NRU
+  const y1nru=monthlyNRU.slice(0,12).reduce((a,b)=>a+b,0);
 
-  // 아이템 매출 = MAU * PU rate * ARPPU (월별 합산)
+  // MAU 계산: NRU + 이전 MAU * 재방문율
+  const mau=[];
+  mau[0]=monthlyNRU[0];
+  for(let i=1;i<36;i++){
+    mau[i]=monthlyNRU[i]+Math.round((mau[i-1]||0)*ret);
+  }
+
+  // 패키지 매출
+  const pkgRev=total3y*avgPkgPrice;
+
+  // 아이템 매출 = MAU * PU Rate * ARPPU (월별)
   let itemRev=0;
-  for(let i=0;i<17;i++) itemRev+=mau[i]*purRate*arppu;
-  // 나머지 19개월: 마지막 MAU 수준 유지
-  const tailMAU=mau[16]*0.85;
-  itemRev+=tailMAU*purRate*arppu*remaining;
+  for(let i=0;i<36;i++) itemRev+=mau[i]*purRate*arppu;
 
-  // 시즌패스 — 분기마다 출시, MAU의 14% 구매 (출시월), 2%씩 후속
+  // 시즌패스
   let spRev=0;
   if(spOn){
     const spPrice=stdPriceKRW*SP_PRICE_RATIO;
+    // 분기마다(M+3,M+6...) 출시, 출시월 MAU 14%, 후속 2%
     for(let q=0;q<12;q++){
       const mIdx=q*3;
-      const m=mIdx<17?mau[mIdx]:(tailMAU);
-      if(q===0) spRev+=m*0.14*spPrice;
-      else spRev+=m*0.02*spPrice*3; // 분기별
+      if(mIdx>=36)break;
+      if(q===0) spRev+=mau[mIdx]*0.14*spPrice;
+      else spRev+=(mau[mIdx]*0.02*3)*spPrice;
     }
   }
 
-  // DLC — M+12에 출시, 전체 MAU의 일정 비율 구매
+  // DLC (M+12에 출시)
   let dlcRev=0;
   if(dlcOn){
     const dlcPrice=stdPriceKRW*DLC_PRICE_RATIO;
-    const dlcMAU=12<17?mau[12]:tailMAU;
-    dlcRev=dlcMAU*(0.50)*dlcPrice + dlcMAU*0.30*dlcPrice + dlcMAU*0.10*dlcPrice; // 출시월+후속
+    const dlcMAU=mau[12]||0;
+    dlcRev=dlcMAU*0.50*dlcPrice+dlcMAU*0.30*dlcPrice+dlcMAU*0.10*dlcPrice;
   }
 
   const totalGross=pkgRev+itemRev+spRev+dlcRev;
 
-  // 스팀 수수료 — 슬라이딩 적용
+  // 스팀 수수료 (슬라이딩)
   const steamGross=totalGross*pcSh;
-  const steamThreshold=65000000000; // 650억
   let steamFeeTotal;
-  if(steamGross<=steamThreshold) steamFeeTotal=steamGross*sf1;
-  else steamFeeTotal=steamThreshold*sf1+(steamGross-steamThreshold)*sf2;
-
-  // 콘솔 수수료 (30%)
-  const consoleFee=totalGross*(psSh+xbSh)*0.30;
+  if(steamGross<=STEAM_FEE_THRESHOLD) steamFeeTotal=steamGross*STEAM_FEE_LOW;
+  else steamFeeTotal=STEAM_FEE_THRESHOLD*STEAM_FEE_LOW+(steamGross-STEAM_FEE_THRESHOLD)*STEAM_FEE_HIGH;
+  const consoleFee=totalGross*(psSh+xbSh)*CONSOLE_FEE;
   const totalFee=steamFeeTotal+consoleFee;
-
-  // Net 매출
   const netRev=totalGross-totalFee;
-
-  // R/S
-  const devRS=netRev*(1-rs);
   const kgRS=netRev*rs;
 
-  // 비용
-  const hrData=HR_PARTS.map(h=>{const v=parseFloat(document.getElementById('h-'+h.id).value)||0;return{...h,mm:v};});
+  // 인프라 = MAU × 인당비용 (월별 합산)
+  let infraCost=0;
+  for(let i=0;i<36;i++) infraCost+=mau[i]*infraPerMAU;
+
+  // 인건비
+  const hrData=HR_PARTS.map(h=>({...h,mm:parseFloat(document.getElementById('h-'+h.id).value)||0}));
   const regMM=hrData.filter(h=>h.t==='r').reduce((a,h)=>a+h.mm,0);
   const extMM=hrData.filter(h=>h.t==='e').reduce((a,h)=>a+h.mm,0);
   const monthlyHR=regMM*REG_COST+extMM*EXT_COST;
   const hrCost3y=monthlyHR*36;
-
-  // 공통비 = 인건비 * 2.5배
-  const commonCost=hrCost3y*2.5;
-
-  // 라이브마케팅 = KG RS Net * lvmRate
+  const commonCost=hrCost3y*COMMON_COST_MULT;
   const liveMkt=kgRS*lvmRate;
-
-  // 인프라 3년
-  const infraCost=infraM*36; // 런칭 후 36개월
-
-  // 기타 사업원가 (L10N 11.5억 + 소프트웨어 1400만*36)
   const l10n=1150000000;
   const swCost=14000000*36;
   const etcCost=l10n+swCost;
-
-  // 총 비용 (공통비 배분 전)
   const totalCostPre=hrCost3y+cbtMkt+lnchMkt+liveMkt+infraCost+lf+mg+etcCost;
-  // 총 비용 (공통비 배분 후)
   const totalCostPost=totalCostPre+commonCost;
-
   const profitPre=kgRS-totalCostPre;
   const profitPost=kgRS-totalCostPost;
   const marginPre=kgRS>0?(profitPre/kgRS*100):0;
   const marginPost=kgRS>0?(profitPost/kgRS*100):0;
 
-  // BEP (공통비 배분 전 기준)
-  const costPerUnit=avgPkgPrice*(1-(sf1*pcSh+0.30*(psSh+xbSh)))*rs;
+  const avgFee=(steamFeeTotal+consoleFee)/Math.max(1,totalGross);
+  const costPerUnit=avgPkgPrice*(1-avgFee)*rs;
   const bepU=costPerUnit>0?Math.round(totalCostPre/costPerUnit):999999999;
-
-  // Y1 NRU
-  const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
-  const bepPct=Math.min(100,Math.round(totalNRU3y/bepU*100));
+  const bepPct=Math.min(100,Math.round(total3y/bepU*100));
   const bepCol=bepPct>=100?'#1fc876':bepPct>=70?'#f5a623':'#5b6ef5';
 
   // KPIs
-  document.getElementById('k-units').textContent=fu(totalNRU3y)+' 장';
+  document.getElementById('k-units').textContent=fu(total3y)+' 장';
   document.getElementById('k-gross').textContent=fa(totalGross);
   document.getElementById('k-net').textContent=fa(kgRS);
   const pe=document.getElementById('k-profit');pe.textContent=fa(profitPre);pe.className='mv '+(profitPre>=0?'pos':'neg');
@@ -404,25 +411,24 @@ function u(){
   document.getElementById('b-bar').style.width=bepPct+'%';document.getElementById('b-bar').style.background=bepCol;
   document.getElementById('b-pct').textContent=bepPct+'%';document.getElementById('b-pct').style.color=bepCol;
 
-  // 비용 테이블
+  // Cost table
   document.getElementById('cost-tbl').innerHTML=[
-    ['퍼블리싱 인건비',fa(hrCost3y)],
-    ['  정규 MM ('+regMM.toFixed(1)+'MM)',fa(regMM*REG_COST*36),'sub'],
-    ['  외주 MM ('+extMM.toFixed(1)+'MM)',fa(extMM*EXT_COST*36),'sub'],
-    ['마케팅 (CBT+런칭+라이브)',fa(cbtMkt+lnchMkt+liveMkt)],
+    ['퍼블리싱 인건비 (3년)',fa(hrCost3y)],
+    ['  정규 ('+regMM.toFixed(1)+'MM)',fa(regMM*REG_COST*36),'sub'],
+    ['  외주 ('+extMM.toFixed(1)+'MM)',fa(extMM*EXT_COST*36),'sub'],
+    ['마케팅 합계',fa(cbtMkt+lnchMkt+liveMkt)],
     ['  CBT',fa(cbtMkt),'sub'],['  런칭',fa(lnchMkt),'sub'],['  라이브',fa(liveMkt),'sub'],
-    ['인프라 (3년)',fa(infraCost)],
+    ['인프라 (MAU×'+infraPerMAU.toLocaleString()+'원)',fa(infraCost)],
     ['MG + LF',fa(mg+lf)],
     ['기타 (L10N, SW)',fa(etcCost)],
-    ['공통비 배분 (인건비×2.5)',fa(commonCost)],
+    ['공통비 (인건비×2.5)',fa(commonCost)],
     ['총비용 (공통비 前)',fa(totalCostPre),'total'],
     ['총비용 (공통비 後)',fa(totalCostPost),'total'],
   ].map(r=>`<tr><td class="${r[2]||''}">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
 
   // HR summary
-  const totalMM=hrData.reduce((a,h)=>a+h.mm,0);
   document.getElementById('hsu').innerHTML=
-    `<div class="hr"><span class="la">총 MM/월</span><span class="va">${totalMM.toFixed(1)}</span></div>`+
+    `<div class="hr"><span class="la">총 MM/월</span><span class="va">${(regMM+extMM).toFixed(1)}</span></div>`+
     `<div class="hr"><span class="la">월 인건비</span><span class="va">${fa(monthlyHR)}</span></div>`+
     `<div class="hr"><span class="la">3년 합계</span><span class="va">${fa(hrCost3y)}</span></div>`;
 
@@ -443,19 +449,23 @@ function u(){
   document.getElementById('cont-lg').innerHTML=ce.map(([n,v])=>`<span><span class="d" style="background:${CONT_COL[n]||'#666'}"></span>${n} ${Math.round(v)}%</span>`).join('');
 
   // Platform table
-  const platData=[{name:'Steam PC',sh:pcSh,fee:steamFeeTotal/Math.max(1,steamGross),col:'#5b6ef5'},{name:'PS5',sh:psSh,fee:.30,col:'#22d4b8'},{name:'Xbox',sh:xbSh,fee:.30,col:'#1fc876'}];
-  document.getElementById('ptbl').innerHTML='<tr><th>플랫폼</th><th style="text-align:right">비중</th><th style="text-align:right">수수료</th><th style="text-align:right">매출(Gross)</th></tr>'+
-    platData.map(p=>`<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${p.col};margin-right:5px"></span>${p.name}</td><td style="text-align:right;font-weight:600">${Math.round(p.sh*100)}%</td><td style="text-align:right;color:var(--text2)">${Math.round(p.fee*100)}%</td><td style="text-align:right;font-weight:600">${fa(totalGross*p.sh)}</td></tr>`).join('');
+  const effSteamFee=steamGross>0?(steamFeeTotal/steamGross):STEAM_FEE_LOW;
+  const platData=[{name:'Steam PC',sh:pcSh,fee:effSteamFee,col:'#5b6ef5'},{name:'PS5',sh:psSh,fee:CONSOLE_FEE,col:'#22d4b8'},{name:'Xbox',sh:xbSh,fee:CONSOLE_FEE,col:'#1fc876'}];
+  document.getElementById('ptbl').innerHTML='<tr><th>플랫폼</th><th style="text-align:right">비중</th><th style="text-align:right">수수료</th><th style="text-align:right">Gross</th><th style="text-align:right">Net</th></tr>'+
+    platData.map(p=>`<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${p.col};margin-right:5px"></span>${p.name}</td><td style="text-align:right;font-weight:600">${Math.round(p.sh*100)}%</td><td style="text-align:right;color:var(--text2)">${Math.round(p.fee*100)}%</td><td style="text-align:right">${fa(totalGross*p.sh)}</td><td style="text-align:right;font-weight:600">${fa(totalGross*p.sh*(1-p.fee))}</td></tr>`).join('');
 
-  draw(nru,pkgRev,itemRev,spRev,dlcRev,kgRS,totalCostPre,totalCostPost,y1nru,totalNRU3y,marginPre,marginPost,hrData,pcSh,psSh,xbSh,sf1,rs,avgPkgPrice);
+  draw(monthlyNRU,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,totalCostPre,totalCostPost,y1nru,total3y,marginPre,marginPost,hrData,pcSh,psSh,xbSh,avgFee,rs,avgPkgPrice);
 }
 
-function draw(nru,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,y1u,tot3y,mPre,mPost,hrData,pcSh,psSh,xbSh,sf1,rs,avgPkg){
+function draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,y1u,tot3y,mPre,mPost,hrData,pcSh,psSh,xbSh,avgFee,rs,avgPkg){
   const D=k=>{if(CH[k])CH[k].destroy();};
-  const gc='rgba(255,255,255,0.05)',tc='#5a5a70',bf={size:10};
+  const gc='rgba(255,255,255,0.05)',tc='#5a5a70',bf={size:9};
 
+  // Show first 17 months in chart (most interesting)
+  const showN=Math.min(36,17);
+  const labels=nru.slice(0,showN).map((_,i)=>i===0?'M':'M+'+i);
   D('s');
-  CH.s=new Chart(document.getElementById('cS'),{type:'bar',data:{labels:nru.map((_,i)=>i===0?'M':'M+'+(i)),datasets:[{data:nru.map(v=>Math.round(v/10000)),backgroundColor:nru.map((_,i)=>i===0?'#5b6ef5':'rgba(91,110,245,0.4)'),borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:bf,maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'만'}}}}});
+  CH.s=new Chart(document.getElementById('cS'),{type:'bar',data:{labels,datasets:[{data:nru.slice(0,showN).map(v=>Math.round(v/10000)),backgroundColor:nru.slice(0,showN).map((_,i)=>i===0?'#5b6ef5':'rgba(91,110,245,0.4)'),borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:bf,maxRotation:45}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'만'}}}}});
 
   const hasDLC=dlcRev>0,hasSP=spRev>0;
   const md=[Math.round(pkgRev/1e8),Math.round(itemRev/1e8),hasSP?Math.round(spRev/1e8):null,hasDLC?Math.round(dlcRev/1e8):null].filter(v=>v!=null&&v>0);
@@ -466,30 +476,35 @@ function draw(nru,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,y1u,tot3y,mP
   CH.m=new Chart(document.getElementById('cM'),{type:'doughnut',data:{labels:ml,datasets:[{data:md,backgroundColor:mc.slice(0,ml.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toLocaleString()+'억'}}},cutout:'62%'}});
 
   // Cumulative
-  const periods=['M~M+3','M+4~6','M+7~9','M+10~12','Y2 H1','Y2 H2','Y3'];
-  const pNru=[nru.slice(0,4),nru.slice(4,7),nru.slice(7,10),nru.slice(10,13),nru.slice(13,17),[],[]]
+  const periods=['Q1','Q2','Q3','Q4','Y2H1','Y2H2','Y3H1','Y3H2'];
+  const qSlices=[[0,3],[3,6],[6,9],[9,12],[12,18],[18,24],[24,30],[30,36]];
   let cum=0;
-  const avgFee=sf1*pcSh+0.30*(psSh+xbSh);
-  const cd=periods.map((_,i)=>{
-    const units=i<5?pNru[i].reduce((a,b)=>a+b,0):(5*10000*6);
-    cum+=units*avgPkg*(1-avgFee)*rs;
+  const cd=qSlices.map(([s,e])=>{
+    for(let i=s;i<e&&i<36;i++) cum+=nru[i]*avgPkg*(1-avgFee)*rs;
     return Math.round(cum/1e8);
   });
-  const clPre=Array(7).fill(Math.round(costPre/1e8));
-  const clPost=Array(7).fill(Math.round(costPost/1e8));
+  const clPre=Array(8).fill(Math.round(costPre/1e8));
+  const clPost=Array(8).fill(Math.round(costPost/1e8));
   D('c');
   CH.c=new Chart(document.getElementById('cC'),{type:'line',data:{labels:periods,datasets:[
     {data:cd,borderColor:'#5b6ef5',backgroundColor:'rgba(91,110,245,0.1)',fill:true,tension:.35,pointRadius:2},
     {data:clPre,borderColor:'#f04a4a',borderDash:[5,3],pointRadius:0,fill:false},
-    {data:clPost,borderColor:'#f04a4a55',borderDash:[2,2],pointRadius:0,fill:false}
+    {data:clPost,borderColor:'rgba(240,74,74,0.3)',borderDash:[2,2],pointRadius:0,fill:false}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:bf}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v.toLocaleString()+'억'}}}}});
 
+  // Margin by year
+  const y1gross=nru.slice(0,12).reduce((a,b)=>a+b,0)*avgPkg;
+  const y2gross=nru.slice(12,24).reduce((a,b)=>a+b,0)*avgPkg;
+  const y3gross=nru.slice(24,36).reduce((a,b)=>a+b,0)*avgPkg;
+  const yCostPre=costPre/3,yCostPost=costPost/3;
+  const yrs=[y1gross,y2gross,y3gross].map(g=>{
+    const net=g*(1-avgFee)*rs;
+    return{pre:net>0?((net-yCostPre)/net*100):0,post:net>0?((net-yCostPost)/net*100):0};
+  });
   D('mar');
-  const y1r=Math.round(mPre*0.6),y2r=Math.round(mPre*0.9),y3r=Math.round(mPre*1.2);
-  const y1rp=Math.round(mPost*0.6),y2rp=Math.round(mPost*0.9),y3rp=Math.round(mPost*1.2);
   CH.mar=new Chart(document.getElementById('cMar'),{type:'bar',data:{labels:['1년차','2년차','3년차'],datasets:[
-    {label:'공통비 前',data:[y1r,y2r,y3r],backgroundColor:'rgba(91,110,245,0.7)',borderRadius:3,borderSkipped:false},
-    {label:'공통비 後',data:[y1rp,y2rp,y3rp],backgroundColor:'rgba(91,110,245,0.3)',borderRadius:3,borderSkipped:false}
+    {label:'공통비 前',data:yrs.map(y=>Math.round(y.pre)),backgroundColor:'rgba(91,110,245,0.7)',borderRadius:3,borderSkipped:false},
+    {label:'공통비 後',data:yrs.map(y=>Math.round(y.post)),backgroundColor:'rgba(91,110,245,0.3)',borderRadius:3,borderSkipped:false}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tc,font:bf,boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'%'}}}}});
 
   const hc=['#5b6ef5','#4a5ce0','#7b8af7','#22d4b8','#1fc876','#16a35e','#f5a623','#d4890f','#f04a4a','#c83a3a','#9898b0'];
@@ -497,7 +512,7 @@ function draw(nru,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,y1u,tot3y,mP
   CH.h=new Chart(document.getElementById('cH'),{type:'bar',data:{labels:hrData.map(h=>h.n),datasets:[{data:hrData.map(h=>h.mm),backgroundColor:hc.slice(0,hrData.length),borderRadius:3,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'MM'}},y:{grid:{display:false},ticks:{color:tc,font:{size:9}}}}}});
 }
 
-initCI();initHI();u();
+initMonthInputs();updateRatioDisplay();initCI();initHI();u();
 </script>
 </body>
 </html>
