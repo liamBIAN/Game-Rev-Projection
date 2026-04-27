@@ -105,15 +105,15 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
   </div>
   <div class="ss"><div class="sl">마케팅</div>
     <div class="ctrl"><div class="ch"><span class="cn">CBT 마케팅 (억)</span><span class="cv" id="l-cbt">10억</span></div><input type="range" id="s-cbt" min="0" max="50" step="5" value="10" oninput="u()"></div>
-    <div class="ctrl"><div class="ch"><span class="cn">런칭 마케팅 (억)</span><span class="cv" id="l-lmk">118억</span></div><input type="range" id="s-lmk" min="30" max="400" step="10" value="118" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">런칭 마케팅 (억)</span><span class="cv" id="l-lmk">94억</span></div><input type="range" id="s-lmk" min="30" max="400" step="10" value="94" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">라이브 마케팅 (RS Net %)</span><span class="cv" id="l-lvm">4%</span></div><input type="range" id="s-lvm" min="1" max="10" step="1" value="4" oninput="u()"></div>
   </div>
   <div class="ss"><div class="sl">인프라</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <span class="cn">인당 비용 (원/MAU·월)</span>
-      <input type="number" class="inline-input" id="s-infra" value="600" min="50" max="5000" step="50" onchange="u()">
+      <span class="cn">인당 비용 (원/MCU·월)</span>
+      <input type="number" class="inline-input" id="s-infra" value="3484" min="500" max="10000" step="100" onchange="u()">
     </div>
-    <div style="font-size:10px;color:var(--text3)">= MAU × 인당비용 (월별 합산)</div>
+    <div style="font-size:10px;color:var(--text3)">= MCU(MAU÷6) × 인당비용 (월별 합산)</div>
   </div>
   <div class="ss"><div class="sl">추가 매출</div>
     <div class="ctrl"><div class="ch"><span class="cn">아이템 ARPPU (원)</span><span class="cv" id="l-arppu">40,000</span></div><input type="range" id="s-arppu" min="10000" max="100000" step="5000" value="40000" oninput="u()"></div>
@@ -171,11 +171,13 @@ const DLC_PRICE_PER_USD = 29090.90909 / 50; // DLC
 const DLC_RATES = [0.50, 0.30, 0.10, 0.05, 0.04, 0.02];
 const SP_RATES = [0.14, 0.02, 0.02]; // 분기마다 3개월 사이클
 
-// 스팀 수수료: Gross 650억 이하 25%, 초과분 20%
-const STEAM_THRESH = 65000000000;
-const SF_LOW = 0.25, SF_HIGH = 0.20;
+// 스팀 수수료: 3단계 (30% / 25% / 20%)
+const STEAM_THRESH1 = 29000000000; // ~290억 이하 30%
+const STEAM_THRESH2 = 65000000000; // ~650억 이하 25%, 초과 20%
+const SF_1 = 0.30, SF_2 = 0.25, SF_3 = 0.20;
 const CONSOLE_FEE = 0.30;
-const COMMON_MULT = 2.5;
+// 공통비: MM당 18,611,795원 (엑셀 검증)
+const COMMON_PER_MM = 18611795;
 
 // 36개월 디폴트 비율
 const DEF_R=[0.220,0.198,0.147,0.085,0.029,0.012278220106132042,0.008,0.008,0.006,0.006,0.006,0.015,0.052,0.032,0.010,0.010,0.010,0.010,0.010,0.010,0.005,0.007,0.009,0.005,0.024,0.010,0.008,0.009,0.010,0.006,0.005,0.006,0.004,0.003,0.003,0.002];
@@ -277,19 +279,20 @@ function u(){
 
   const totalGross=pkgRev+itemRev+spRev+dlcRev;
 
-  // 스팀 수수료 (슬라이딩)
+  // 스팀 수수료 (3단계: 30%/25%/20%)
   const steamGross=totalGross*pcSh;
   let steamFee;
-  if(steamGross<=STEAM_THRESH) steamFee=steamGross*SF_LOW;
-  else steamFee=STEAM_THRESH*SF_LOW+(steamGross-STEAM_THRESH)*SF_HIGH;
+  if(steamGross<=STEAM_THRESH1) steamFee=steamGross*SF_1;
+  else if(steamGross<=STEAM_THRESH2) steamFee=STEAM_THRESH1*SF_1+(steamGross-STEAM_THRESH1)*SF_2;
+  else steamFee=STEAM_THRESH1*SF_1+(STEAM_THRESH2-STEAM_THRESH1)*SF_2+(steamGross-STEAM_THRESH2)*SF_3;
   const consoleFee=totalGross*(psSh+xbSh)*CONSOLE_FEE;
   const totalFee=steamFee+consoleFee;
   const netRev=totalGross-totalFee;
   const kgRS=netRev*rs;
 
-  // 인프라 = MAU × 인당비용 (월별)
+  // 인프라 = MCU × 인당비용 (월별) — MCU = MAU/6
   let infraCost=0;
-  for(let i=0;i<36;i++) infraCost+=mau[i]*infraPer;
+  for(let i=0;i<36;i++) infraCost+=(mau[i]/6)*infraPer;
 
   // 인건비
   const hrD=HP.map(h=>({...h,mm:parseFloat(document.getElementById('h-'+h.id).value)||0}));
@@ -297,7 +300,9 @@ function u(){
   const extMM=hrD.filter(h=>h.t==='e').reduce((a,h)=>a+h.mm,0);
   const mHR=regMM*RC+extMM*EC;
   const hr3y=mHR*36;
-  const comCost=hr3y*COMMON_MULT;
+  // 공통비 = 총 MM × MM당 공통비 × 36개월
+  const totalMM=regMM+extMM;
+  const comCost=totalMM*COMMON_PER_MM*36;
   const liveMkt=kgRS*lvmRate;
   const etcCost=1150000000+14000000*36;
   const costPre=hr3y+cbtMkt+lnchMkt+liveMkt+infraCost+lf+mg+etcCost;
@@ -308,8 +313,8 @@ function u(){
   const mPost=kgRS>0?(profPost/kgRS*100):0;
 
   const avgFee=totalGross>0?totalFee/totalGross:0.25;
-  // BEP: 패키지 매출 기준 수수료율 사용 (아이템/DLC 제외)
-  const pkgFeeRate=SF_LOW*pcSh+CONSOLE_FEE*(psSh+xbSh);
+  // BEP: 패키지 기준, BEP 도달 시점은 매출 초기라 스팀 30% 구간
+  const pkgFeeRate=SF_1*pcSh+CONSOLE_FEE*(psSh+xbSh);
   const cpU=pkgPrice*(1-pkgFeeRate)*rs;
   const bepU=cpU>0?Math.round(costPost/cpU):999999999;
   const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
@@ -334,8 +339,8 @@ function u(){
   document.getElementById('cost-tbl').innerHTML=[
     ['퍼블리싱 인건비',fa(hr3y)],['  정규 ('+regMM.toFixed(1)+'MM)',fa(regMM*RC*36),'sub'],['  외주 ('+extMM.toFixed(1)+'MM)',fa(extMM*EC*36),'sub'],
     ['마케팅 합계',fa(cbtMkt+lnchMkt+liveMkt)],['  CBT',fa(cbtMkt),'sub'],['  런칭',fa(lnchMkt),'sub'],['  라이브',fa(liveMkt),'sub'],
-    ['인프라 (MAU×'+infraPer+'원)',fa(infraCost)],['MG + LF',fa(mg+lf)],['기타 (L10N, SW)',fa(etcCost)],
-    ['공통비 (인건비×2.5)',fa(comCost)],['총비용 (공통비 前)',fa(costPre),'total'],['총비용 (공통비 後)',fa(costPost),'total'],
+    ['인프라 (MCU×'+infraPer.toLocaleString()+'원)',fa(infraCost)],['MG + LF',fa(mg+lf)],['기타 (L10N, SW)',fa(etcCost)],
+    ['공통비 (MM당 '+Math.round(COMMON_PER_MM/10000)+'만×'+totalMM.toFixed(1)+'MM)',fa(comCost)],['총비용 (공통비 前)',fa(costPre),'total'],['총비용 (공통비 後)',fa(costPost),'total'],
   ].map(r=>`<tr><td class="${r[2]||''}">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
 
   document.getElementById('hsu').innerHTML=`<div class="hr"><span class="la">총 MM/월</span><span class="va">${(regMM+extMM).toFixed(1)}</span></div><div class="hr"><span class="la">월 인건비</span><span class="va">${fa(mHR)}</span></div><div class="hr"><span class="la">3년 합계</span><span class="va">${fa(hr3y)}</span></div>`;
