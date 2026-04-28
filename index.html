@@ -119,7 +119,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
     <div class="ctrl"><div class="ch"><span class="cn">아이템 ARPPU (원)</span><span class="cv" id="l-arppu">40,000</span></div><input type="range" id="s-arppu" min="10000" max="100000" step="5000" value="40000" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">아이템 PU Rate</span><span class="cv" id="l-pur">5%</span></div><input type="range" id="s-pur" min="1" max="15" step="1" value="5" oninput="u()"></div>
     <div class="tr"><span class="tl">시즌패스</span><label class="tg"><input type="checkbox" id="t-sp" checked onchange="u()"><span class="ts"></span></label></div>
-    <div class="tr"><span class="tl">DLC (M+12 출시)</span><label class="tg"><input type="checkbox" id="t-dlc" checked onchange="u()"><span class="ts"></span></label></div>
+    <div class="tr"><span class="tl">DLC (12개월마다)</span><label class="tg"><input type="checkbox" id="t-dlc" checked onchange="u()"><span class="ts"></span></label></div>
   </div>
   <div class="ss"><div class="sl">국가별 Steam 비중 (%) <span class="tb" onclick="tog('sec-c')">펼치기</span></div>
     <div class="co" id="sec-c"><div id="ci"></div><div style="font-size:10px;color:var(--text3);margin-top:4px">합계: <strong id="cs">100</strong>%</div></div>
@@ -267,13 +267,14 @@ function u(){
     }
   }
 
-  // ===== DLC 매출 (엑셀 검증: M+12 출시, 6개월간 50%/30%/10%/5%/4%/2%) =====
+  // ===== DLC 매출 (엑셀 검증: M+12, M+24, M+36... 12개월마다 출시, 6개월간 50%/30%/10%/5%/4%/2%) =====
   let dlcRev=0;
   if(dlcOn){
-    const dlcStart=12;
-    for(let j=0;j<DLC_RATES.length;j++){
-      const mi=dlcStart+j;
-      if(mi<36) dlcRev+=mau[mi]*DLC_RATES[j]*dlcPrice;
+    for(let dlcStart=12;dlcStart<36;dlcStart+=12){
+      for(let j=0;j<DLC_RATES.length;j++){
+        const mi=dlcStart+j;
+        if(mi<36) dlcRev+=mau[mi]*DLC_RATES[j]*dlcPrice;
+      }
     }
   }
 
@@ -312,18 +313,13 @@ function u(){
   const mPost=kgRS>0?(profPost/kgRS*100):0;
 
   const avgFee=totalGross>0?totalFee/totalGross:0.25;
-  // BEP: (총비용 - 인게임KGRS기여) / 단위당 패키지 공헌이익
-  // 인게임 매출의 KG RS 기여분
+  // BEP: (총비용 공통비후 - 인게임 KGRS) / 패키지 단위당 KGRS
+  // 엑셀 검증: 916.9억 - 209억 = 708억 / 23,483원 = 301만장 ≈ 306만장
   const ingameGross=itemRev+spRev+dlcRev;
-  const ingameNet=ingameGross*(1-avgFee);
-  const ingameKGRS=ingameNet*rs;
-  // 패키지 단위당 공헌이익 (실효수수료 기준, 라이브마케팅 변동비 차감)
+  const ingameKGRS=ingameGross*(1-avgFee)*rs;
   const pkgPerUnit=pkgPrice*(1-avgFee)*rs;
-  const livePerUnit=pkgPerUnit*lvmRate;
-  const contribution=pkgPerUnit-livePerUnit;
-  // 패키지로 커버할 비용 = 총비용(공통비후) - 인게임 기여
   const coverCost=Math.max(0,costPost-ingameKGRS);
-  const bepU=contribution>0?Math.round(coverCost/contribution):999999999;
+  const bepU=pkgPerUnit>0?Math.round(coverCost/pkgPerUnit):999999999;
   const y1nru=nru.slice(0,12).reduce((a,b)=>a+b,0);
   const bepPct=Math.min(100,Math.round(total3y/bepU*100));
   const bepCol=bepPct>=100?'#1fc876':bepPct>=70?'#f5a623':'#5b6ef5';
