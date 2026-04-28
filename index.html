@@ -84,6 +84,8 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
     <div class="ctrl"><div class="ch"><span class="cn">LF (억원)</span><span class="cv" id="l-lf">150억</span></div><input type="range" id="s-lf" min="0" max="500" step="10" value="150" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">MG (억원)</span><span class="cv" id="l-mg">100억</span></div><input type="range" id="s-mg" min="0" max="500" step="10" value="100" oninput="u()"></div>
     <div class="ctrl"><div class="ch"><span class="cn">KG R/S</span><span class="cv" id="l-rs">60%</span></div><input type="range" id="s-rs" min="40" max="80" step="5" value="60" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">준비기간 (개월)</span><span class="cv" id="l-prep">39</span></div><input type="range" id="s-prep" min="0" max="60" step="1" value="39" oninput="u()"></div>
+    <div class="ctrl"><div class="ch"><span class="cn">준비기간 인력 가동률</span><span class="cv" id="l-prepr">50%</span></div><input type="range" id="s-prepr" min="20" max="100" step="5" value="50" oninput="u()"></div>
   </div>
   <div class="ss"><div class="sl">판매 가정</div>
     <div class="ctrl"><div class="ch"><span class="cn">3년 누적 판매 (만장)</span><span class="cv" id="l-3y">500만</span></div><input type="range" id="s-3y" min="100" max="1500" step="10" value="500" oninput="u()"></div>
@@ -146,8 +148,8 @@ input[type=number]::-webkit-inner-spin-button{opacity:1}
   </div>
   <div class="g3">
     <div class="cc"><div class="ct">매출 구성 (3년 Gross)</div><div class="lg" id="mx-lg"></div><div style="position:relative;height:150px"><canvas id="cM"></canvas></div></div>
-    <div class="cc"><div class="ct">누적 KG RS Net vs 총비용</div><div class="lg"><span class="li"><span class="ld" style="background:#5b6ef5"></span>누적Net</span><span class="li"><span class="ld" style="background:#f04a4a"></span>비용(前)</span><span class="li"><span class="ld" style="background:rgba(240,74,74,0.3)"></span>비용(後)</span></div><div style="position:relative;height:150px"><canvas id="cC"></canvas></div></div>
-    <div class="cc"><div class="ct">연도별 영업이익률</div><div style="position:relative;height:175px"><canvas id="cMar"></canvas></div></div>
+    <div class="cc"><div class="ct">누적 KG RS Net vs 누적 총비용 (월별 · BEP 도달 시점 시각화)</div><div class="lg"><span class="li"><span class="ld" style="background:#5b6ef5"></span>누적Net</span><span class="li"><span class="ld" style="background:#f04a4a"></span>비용(前)</span><span class="li"><span class="ld" style="background:rgba(240,74,74,0.3)"></span>비용(後)</span></div><div style="position:relative;height:150px"><canvas id="cC"></canvas></div></div>
+    <div class="cc"><div class="ct">운영 연도별 영업이익률 (준비기간 비용 제외)</div><div style="position:relative;height:175px"><canvas id="cMar"></canvas></div></div>
   </div>
   <div class="g2">
     <div class="cc"><div class="st">대륙별 Steam 매출 비중</div><div class="cb" id="cont-bar"></div><div class="cl" id="cont-lg"></div><div class="st" style="margin-top:10px">국가별 Steam 매출</div><div class="rg" id="rg"></div></div>
@@ -205,6 +207,8 @@ function u(){
   const lf=+document.getElementById('s-lf').value*1e8;
   const mg=+document.getElementById('s-mg').value*1e8;
   const rs=+document.getElementById('s-rs').value/100;
+  const prepMonths=+document.getElementById('s-prep').value;
+  const prepRate=+document.getElementById('s-prepr').value/100;
   const total3y=+document.getElementById('s-3y').value*10000;
   const total1y=+document.getElementById('s-1y').value*10000;
   const ret=+document.getElementById('s-ret').value/100;
@@ -225,6 +229,8 @@ function u(){
   document.getElementById('l-lf').textContent=Math.round(lf/1e8)+'억';
   document.getElementById('l-mg').textContent=Math.round(mg/1e8)+'억';
   document.getElementById('l-rs').textContent=Math.round(rs*100)+'%';
+  document.getElementById('l-prep').textContent=prepMonths;
+  document.getElementById('l-prepr').textContent=Math.round(prepRate*100)+'%';
   document.getElementById('l-3y').textContent=Math.round(total3y/10000)+'만';
   document.getElementById('l-1y').textContent=Math.round(total1y/10000)+'만';
   document.getElementById('l-ret').textContent=Math.round(ret*100)+'%';
@@ -294,23 +300,26 @@ function u(){
   let infraCost=0;
   for(let i=0;i<36;i++) infraCost+=(mau[i]/6)*infraPer;
 
-  // 인건비
+  // 인건비: 운영 36개월(100%) + 준비기간(가동률 적용)
   const hrD=HP.map(h=>({...h,mm:parseFloat(document.getElementById('h-'+h.id).value)||0}));
   const regMM=hrD.filter(h=>h.t==='r').reduce((a,h)=>a+h.mm,0);
   const extMM=hrD.filter(h=>h.t==='e').reduce((a,h)=>a+h.mm,0);
   const mHR=regMM*RC+extMM*EC;
-  const hr3y=mHR*36;
+  const effMonths=36+prepMonths*prepRate;
+  const totalMonths=36+prepMonths;
+  const hr3y=mHR*effMonths;
   // 공통비 = 인건비 × 1.95배 (엑셀 검증)
   const totalMM=regMM+extMM;
   const comCost=hr3y*COMMON_RATIO;
   const liveMkt=kgRS*lvmRate;
-  const etcCost=1150000000+14000000*36;
+  // 기타원가도 준비+운영 기간 적용 (가동률 반영)
+  const etcCost=(1150000000/36)*effMonths+14000000*effMonths;
   const costPre=hr3y+cbtMkt+lnchMkt+liveMkt+infraCost+lf+mg+etcCost;
   const costPost=costPre+comCost;
   const profPre=kgRS-costPre;
   const profPost=kgRS-costPost;
-  const mPre=kgRS>0?(profPre/kgRS*100):0;
-  const mPost=kgRS>0?(profPost/kgRS*100):0;
+  const mPre=totalGross>0?(profPre/totalGross*100):0;
+  const mPost=totalGross>0?(profPost/totalGross*100):0;
 
   const avgFee=totalGross>0?totalFee/totalGross:0.25;
   // BEP: (총비용 공통비후 - 인게임 KGRS) / 패키지 단위당 KGRS
@@ -340,13 +349,13 @@ function u(){
 
   // Cost table
   document.getElementById('cost-tbl').innerHTML=[
-    ['퍼블리싱 인건비',fa(hr3y)],['  정규 ('+regMM.toFixed(1)+'MM)',fa(regMM*RC*36),'sub'],['  외주 ('+extMM.toFixed(1)+'MM)',fa(extMM*EC*36),'sub'],
+    ['퍼블리싱 인건비 (실효 '+effMonths.toFixed(0)+'개월)',fa(hr3y)],['  정규 ('+regMM.toFixed(1)+'MM)',fa(regMM*RC*effMonths),'sub'],['  외주 ('+extMM.toFixed(1)+'MM)',fa(extMM*EC*effMonths),'sub'],
     ['마케팅 합계',fa(cbtMkt+lnchMkt+liveMkt)],['  CBT',fa(cbtMkt),'sub'],['  런칭',fa(lnchMkt),'sub'],['  라이브',fa(liveMkt),'sub'],
     ['인프라 (MCU×'+infraPer.toLocaleString()+'원)',fa(infraCost)],['MG + LF',fa(mg+lf)],['기타 (L10N, SW)',fa(etcCost)],
     ['공통비 (인건비×'+COMMON_RATIO+')',fa(comCost)],['총비용 (공통비 前)',fa(costPre),'total'],['총비용 (공통비 後)',fa(costPost),'total'],
   ].map(r=>`<tr><td class="${r[2]||''}">${r[0]}</td><td>${r[1]}</td></tr>`).join('');
 
-  document.getElementById('hsu').innerHTML=`<div class="hr"><span class="la">총 MM/월</span><span class="va">${(regMM+extMM).toFixed(1)}</span></div><div class="hr"><span class="la">월 인건비</span><span class="va">${fa(mHR)}</span></div><div class="hr"><span class="la">3년 합계</span><span class="va">${fa(hr3y)}</span></div>`;
+  document.getElementById('hsu').innerHTML=`<div class="hr"><span class="la">총 MM/월</span><span class="va">${(regMM+extMM).toFixed(1)}</span></div><div class="hr"><span class="la">월 인건비</span><span class="va">${fa(mHR)}</span></div><div class="hr"><span class="la">실효 ${effMonths.toFixed(0)}개월</span><span class="va">${fa(hr3y)}</span></div>`;
 
   // Country
   const cD=COUNTRIES.map(c=>({...c,pct:parseFloat(document.getElementById('c-'+c.code).value)||0}));
@@ -369,10 +378,12 @@ function u(){
     `<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#22d4b8;margin-right:5px"></span>PS5 (추정)</td><td style="text-align:right;color:var(--text2)">30%</td><td style="text-align:right">${fa(totalGross*psSh/(pcSh||1))}</td><td style="text-align:right">${fa(totalGross*psSh/(pcSh||1)*0.70)}</td></tr>`+
     `<tr><td><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#1fc876;margin-right:5px"></span>Xbox (추정)</td><td style="text-align:right;color:var(--text2)">30%</td><td style="text-align:right">${fa(totalGross*xbSh/(pcSh||1))}</td><td style="text-align:right">${fa(totalGross*xbSh/(pcSh||1)*0.70)}</td></tr>`;
 
-  draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgFee,rs,pkgPrice);
+  draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgFee,rs,pkgPrice,
+    {mHR,prepMonths,prepRate,cbtMkt,lnchMkt,lvmRate,infraPer,lf,mg,arppu,purRate,spOn,dlcOn,
+     pkgPrice,spPrice,dlcPrice,COMMON_RATIO_VAL:COMMON_RATIO,SF_1_V:SF_1,SF_2_V:SF_2,SF_3_V:SF_3,T1:STEAM_THRESH1,T2:STEAM_THRESH2});
 }
 
-function draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgFee,rs,pkgP){
+function draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgFee,rs,pkgP,P){
   const D=k=>{if(CH[k])CH[k].destroy();};
   const gc='rgba(255,255,255,0.05)',tc='#5a5a70',bf={size:9};
   const N=Math.min(36,17);
@@ -384,15 +395,135 @@ function draw(nru,mau,pkgRev,itemRev,spRev,dlcRev,kgRS,costPre,costPost,hrD,avgF
   document.getElementById('mx-lg').innerHTML=ml.map((l,i)=>`<span class="li"><span class="ld" style="background:${mc[i]}"></span>${l} ${md[i].toLocaleString()}억</span>`).join('');
   D('m');CH.m=new Chart(document.getElementById('cM'),{type:'doughnut',data:{labels:ml,datasets:[{data:md,backgroundColor:mc.slice(0,ml.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw.toLocaleString()+'억'}}},cutout:'62%'}});
 
-  const qs=[[0,3],[3,6],[6,9],[9,12],[12,18],[18,24],[24,30],[30,36]];
-  let cum=0;const cd=qs.map(([s,e])=>{for(let i=s;i<e&&i<36;i++)cum+=nru[i]*pkgP*(1-avgFee)*rs;return Math.round(cum/1e8);});
-  D('c');CH.c=new Chart(document.getElementById('cC'),{type:'line',data:{labels:['Q1','Q2','Q3','Q4','Y2H1','Y2H2','Y3H1','Y3H2'],datasets:[{data:cd,borderColor:'#5b6ef5',backgroundColor:'rgba(91,110,245,0.1)',fill:true,tension:.35,pointRadius:2},{data:Array(8).fill(Math.round(costPre/1e8)),borderColor:'#f04a4a',borderDash:[5,3],pointRadius:0,fill:false},{data:Array(8).fill(Math.round(costPost/1e8)),borderColor:'rgba(240,74,74,0.3)',borderDash:[2,2],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:bf}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v.toLocaleString()+'억'}}}}});
+  // ===== 월별 손익 정확 계산 =====
+  // 매월 매출/비용/영업이익 산출하여 정확한 누적 곡선 그리기
+  const SP_R=[0.14,0.02,0.02];
+  const DLC_R=[0.50,0.30,0.10,0.05,0.04,0.02];
+  const monthlyData=[];
+  let cumGross=0;
 
-  // Yearly margin
-  const ySlice=[[0,12],[12,24],[24,36]];
-  const yCostPre=costPre/3,yCostPost=costPost/3;
-  const yrs=ySlice.map(([s,e])=>{let g=0;for(let i=s;i<e;i++)g+=nru[i]*pkgP;const n=g*(1-avgFee)*rs;return{pre:n>0?((n-yCostPre)/n*100):0,post:n>0?((n-yCostPost)/n*100):0};});
-  D('mar');CH.mar=new Chart(document.getElementById('cMar'),{type:'bar',data:{labels:['1년차','2년차','3년차'],datasets:[{label:'공통비 前',data:yrs.map(y=>Math.round(y.pre)),backgroundColor:'rgba(91,110,245,0.7)',borderRadius:3,borderSkipped:false},{label:'공통비 後',data:yrs.map(y=>Math.round(y.post)),backgroundColor:'rgba(91,110,245,0.3)',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tc,font:bf,boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'%'}}}}});
+  // 준비기간 인건비/공통비/기타원가 (런칭 전 분산)
+  const prepHR=P.mHR*P.prepRate;  // 준비기간 월 인건비
+  const prepCom=prepHR*P.COMMON_RATIO_VAL;
+  const prepEtc=(1.15e9/36+14e6)*P.prepRate;
+  const opHR=P.mHR;  // 운영기간 월 인건비
+  const opCom=opHR*P.COMMON_RATIO_VAL;
+  const opEtc=(1.15e9/36+14e6);
+
+  // 준비기간 마케팅: CBT를 준비기간 끝쪽에 배분, 런칭마케팅은 준비 6개월 + 런칭월 집중
+  // 단순화: CBT는 준비기간 마지막 3개월 균등, 런칭마케팅은 준비 마지막 3개월 + M+0~M+2 균등
+  const prepCbtMonth=P.prepMonths>=3?P.cbtMkt/3:P.cbtMkt/Math.max(1,P.prepMonths);
+  const prepLnchPart=P.lnchMkt*0.5;  // 50% 준비기간 (마지막 3개월)
+  const opLnchPart=P.lnchMkt*0.5;    // 50% 운영초기 (M+0~M+2)
+  const prepLnchMonth=P.prepMonths>=3?prepLnchPart/3:prepLnchPart/Math.max(1,P.prepMonths);
+
+  // LF/MG: 엑셀 패턴 (1년차 47%, 2년차 12%, 3년차 12%, 4년차+ 6%)
+  // 운영 36개월 기준: 1년차 117.5/12 = 9.79/월, 2년차 30/12 = 2.5/월, 3년차 2.5/월
+  const lfmgTotal=P.lf+P.mg;
+  const lfmgY1=lfmgTotal*0.47/12;
+  const lfmgY2=lfmgTotal*0.12/12;
+  const lfmgY3=lfmgTotal*0.12/12;
+
+  // 준비기간 누적 적자 (월 단위)
+  let cumProfit=0;
+  for(let pm=0;pm<P.prepMonths;pm++){
+    const inPrep3=(pm>=P.prepMonths-3);  // 준비기간 마지막 3개월
+    const cost=prepHR+prepCom+prepEtc+(inPrep3?prepCbtMonth+prepLnchMonth:0);
+    cumProfit-=cost;
+    monthlyData.push({label:'M-'+(P.prepMonths-pm),gross:0,profit:-cost,cumProfit,cumNRU:0,phase:'prep'});
+  }
+
+  // 운영 36개월
+  let cumNRU=0;
+  for(let i=0;i<36;i++){
+    // 매출 (월별)
+    const mPkg=nru[i]*P.pkgPrice;
+    const mItem=mau[i]*P.purRate*P.arppu;
+    const mSP=P.spOn?(mau[i]*SP_R[i%3]*P.spPrice):0;
+    let mDLC=0;
+    if(P.dlcOn){
+      for(let ds=12;ds<36;ds+=12){
+        if(i>=ds&&i<ds+6) mDLC+=mau[i]*DLC_R[i-ds]*P.dlcPrice;
+      }
+    }
+    const mGross=mPkg+mItem+mSP+mDLC;
+    cumGross+=mGross;
+
+    // 누적 Gross 기준 슬라이딩 수수료
+    let monthFee;
+    if(cumGross<=P.T1) monthFee=mGross*P.SF_1_V;
+    else if(cumGross<=P.T2){
+      const before=Math.max(0,cumGross-mGross);
+      const inT1=Math.max(0,P.T1-before);
+      monthFee=inT1*P.SF_1_V+(mGross-inT1)*P.SF_2_V;
+    } else {
+      const before=Math.max(0,cumGross-mGross);
+      const inT1=Math.max(0,P.T1-before);
+      const inT2=Math.max(0,Math.min(P.T2,cumGross)-Math.max(P.T1,before));
+      const inT3=mGross-inT1-inT2;
+      monthFee=inT1*P.SF_1_V+inT2*P.SF_2_V+inT3*P.SF_3_V;
+    }
+    const mNet=mGross-monthFee;
+    const mKGRS=mNet*rs;
+
+    // 비용 (월별)
+    const mInfra=(mau[i]/6)*P.infraPer;
+    const mLive=mKGRS*P.lvmRate;
+    const mLnch=(i<3)?opLnchPart/3:0;  // M+0~M+2에 운영분 런칭마케팅
+    const mLfMg=i<12?lfmgY1:(i<24?lfmgY2:lfmgY3);
+    const mCost=opHR+opCom+opEtc+mInfra+mLive+mLnch+mLfMg;
+    const mProfit=mKGRS-mCost;
+    cumProfit+=mProfit;
+    cumNRU+=nru[i];
+    monthlyData.push({label:'M+'+i,gross:mGross,kgRS:mKGRS,cost:mCost,profit:mProfit,cumProfit,cumNRU,phase:'op',idx:i});
+  }
+
+  // 누적 차트: 월별 누적 KG RS 손익 (런칭 시점 0 기준)
+  const opData=monthlyData.filter(d=>d.phase==='op');
+  // 누적 KG RS Net (운영 시작부터 월별)
+  let cumKGRS=0;
+  const cumKGRSarr=opData.map(d=>{cumKGRS+=d.kgRS;return Math.round(cumKGRS/1e8);});
+  // 누적 비용 (준비기간 비용 + 운영 누적 비용)
+  const prepTotalCost=Math.abs(monthlyData[0]?.cumProfit||0)+Math.abs(monthlyData.filter(d=>d.phase==='prep').slice(-1)[0]?.cumProfit||0)/2;
+  // 정확히는 마지막 prep cumProfit의 음수
+  const prepNeg=monthlyData.filter(d=>d.phase==='prep').length>0?Math.abs(monthlyData.filter(d=>d.phase==='prep').slice(-1)[0].cumProfit):0;
+  let cumCost=prepNeg;
+  const cumCostArr=opData.map(d=>{cumCost+=d.cost;return Math.round(cumCost/1e8);});
+  const cumCostPostArr=cumCostArr.map(v=>Math.round(v*(costPost/Math.max(1,costPre))));
+
+  // x축 라벨: M+0, M+3, M+6, M+9, ..., M+36
+  const labels=opData.map(d=>d.label);
+
+  // 누적 차트: 누적 KG RS Net vs 누적 총비용 (월별, 준비기간 비용 포함)
+  D('c');CH.c=new Chart(document.getElementById('cC'),{type:'line',data:{labels,datasets:[
+    {label:'누적 KG RS Net',data:cumKGRSarr,borderColor:'#5b6ef5',backgroundColor:'rgba(91,110,245,0.1)',fill:true,tension:.2,pointRadius:0},
+    {label:'누적 총비용(前)',data:cumCostArr,borderColor:'#f04a4a',borderDash:[5,3],pointRadius:0,fill:false},
+    {label:'누적 총비용(後)',data:cumCostPostArr,borderColor:'rgba(240,74,74,0.4)',borderDash:[2,2],pointRadius:0,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw.toLocaleString()+'억'}}},scales:{x:{grid:{display:false},ticks:{color:tc,font:bf,maxTicksLimit:8}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v.toLocaleString()+'억'}}}}});
+
+  // 연도별 이익률: 운영기간 월별 데이터만 합산, 분모는 Gross (엑셀 방식)
+  const yrs=[[0,12],[12,24],[24,36]].map(([s,e])=>{
+    let yKGRS=0,yCostPost=0,yGross=0;
+    for(let i=s;i<e;i++){
+      const d=opData[i];
+      yKGRS+=d.kgRS;
+      yCostPost+=d.cost;
+      yGross+=d.gross;
+    }
+    const yCostPre=yCostPost-opCom*(e-s);
+    return{
+      pre:yGross>0?((yKGRS-yCostPre)/yGross*100):0,
+      post:yGross>0?((yKGRS-yCostPost)/yGross*100):0,
+      kgRS:yKGRS,
+      costPre:yCostPre,
+      costPost:yCostPost
+    };
+  });
+
+  D('mar');CH.mar=new Chart(document.getElementById('cMar'),{type:'bar',data:{labels:['1년차','2년차','3년차'],datasets:[
+    {label:'공통비 前',data:yrs.map(y=>Math.round(y.pre)),backgroundColor:'rgba(91,110,245,0.7)',borderRadius:3,borderSkipped:false},
+    {label:'공통비 後',data:yrs.map(y=>Math.round(y.post)),backgroundColor:'rgba(91,110,245,0.3)',borderRadius:3,borderSkipped:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:tc,font:bf,boxWidth:8}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'%'}}}}});
 
   const hc=['#5b6ef5','#4a5ce0','#7b8af7','#22d4b8','#1fc876','#16a35e','#f5a623','#d4890f','#f04a4a','#c83a3a','#9898b0'];
   D('h');CH.h=new Chart(document.getElementById('cH'),{type:'bar',data:{labels:hrD.map(h=>h.n),datasets:[{data:hrD.map(h=>h.mm),backgroundColor:hc,borderRadius:3,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'MM'}},y:{grid:{display:false},ticks:{color:tc,font:{size:9}}}}}});
